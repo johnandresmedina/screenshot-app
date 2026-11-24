@@ -158,6 +158,21 @@ pub fn temp_path_for(dir: &Path, file_name: &str) -> PathBuf {
     dir.join(format!(".partial-{file_name}"))
 }
 
+/// Moves a finished file into `dir` as `name`. Tries a rename first; if the
+/// source is on another volume, copies to a hidden temp name and renames, so
+/// readers still never see a partial file.
+pub fn move_into(src: &Path, dir: &Path, name: &str) -> io::Result<()> {
+    let target = dir.join(name);
+    if fs::rename(src, &target).is_ok() {
+        return Ok(());
+    }
+    let tmp = temp_path_for(dir, name);
+    fs::copy(src, &tmp)?;
+    fs::rename(&tmp, &target)?;
+    let _ = fs::remove_file(src);
+    Ok(())
+}
+
 /// Writes the sidecar atomically (temp file, then rename).
 pub fn write_meta(image: &Path, meta: &CaptureMeta) -> io::Result<()> {
     let target = sidecar_path(image);
@@ -240,6 +255,17 @@ mod tests {
         let second = new_file_name(dir.path(), now);
         assert_ne!(first, second);
         assert!(second.ends_with("-2.png"));
+    }
+
+    #[test]
+    fn move_into_puts_the_file_in_place_and_removes_the_source() {
+        let src_dir = tempfile::tempdir().unwrap();
+        let dir = tempfile::tempdir().unwrap();
+        let src = src_dir.path().join("x.png");
+        fs::write(&src, png(2, 2)).unwrap();
+        move_into(&src, dir.path(), "x.png").unwrap();
+        assert!(!src.exists());
+        assert_eq!(list(dir.path()).unwrap().len(), 1);
     }
 
     #[test]

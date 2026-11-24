@@ -11,22 +11,32 @@ use std::process::Command;
 pub fn region(dir: &Path) -> Result<Option<String>, String> {
     fs::create_dir_all(dir).map_err(|e| format!("could not create {}: {e}", dir.display()))?;
     let name = store::new_file_name(dir, chrono::Local::now());
-    // Write to a hidden temp name first so a scan never sees a half-written file.
-    let tmp = store::temp_path_for(dir, &name);
 
-    let status = Command::new("/usr/sbin/screencapture")
+    // Capture into a private temp folder, then move the finished file in, so a
+    // scan never sees a half-written image. (screencapture refuses to write to
+    // a hidden, dot-prefixed file name, so a temp name in `dir` doesn't work.)
+    let tmp_dir = std::env::temp_dir().join("screenshot-app");
+    fs::create_dir_all(&tmp_dir).map_err(|e| format!("could not create temp folder: {e}"))?;
+    let tmp = tmp_dir.join(&name);
+
+    let out = Command::new("/usr/sbin/screencapture")
         .arg("-i")
         .arg(&tmp)
-        .status()
+        .output()
         .map_err(|e| format!("could not run screencapture: {e}"))?;
 
     if !tmp.exists() {
-        // Esc in the overlay exits without writing a file.
-        return if status.success() { Ok(None) } else { Err(format!("screencapture failed ({status})")) };
+        // Esc in the overlay exits without writing a file and without an error.
+        let stderr = String::from_utf8_lossy(&out.stderr).trim().to_string();
+        return if out.status.success() && stderr.is_empty() {
+            Ok(None)
+        } else {
+            Err(format!("screencapture failed: {}", if stderr.is_empty() { out.status.to_string() } else { stderr }))
+        };
     }
 
     let final_path = dir.join(&name);
-    fs::rename(&tmp, &final_path).map_err(|e| format!("could not save capture: {e}"))?;
+    store::move_into(&tmp, dir, &name).map_err(|e| format!("could not save capture: {e}"))?;
     let meta = CaptureMeta {
         version: Some(1),
         created_at: Some(chrono::Utc::now().timestamp_millis() as u64),

@@ -21,8 +21,11 @@ nothing can be lost.
 
 1. **Images**: `.png` (also `.jpg`/`.jpeg`). Name new files `YYYY-MM-DD_HHMMSS_mmm.png`
    in local time; if that exists, add `-2`, `-3`, and so on.
-2. **Write atomically**: write to a hidden name first (`.partial-<name>`), then rename.
-   Readers skip every file whose name starts with `.`, so they never see half an image.
+2. **Write atomically**: never let a half-written image appear under its final name.
+   - `screencapture` refuses hidden (dot-prefixed) output names, so capture into a temp folder
+     (the app uses `$TMPDIR/screenshot-app/<name>.png`) and then rename it into the folder.
+   - If a rename isn't possible (another volume), copy to `.partial-<name>` in the folder and rename.
+   Readers skip every file whose name starts with `.`.
 3. **Sidecar** (optional): `<same stem>.json`, also written to `.partial-…` and renamed:
    ```json
    { "version": 1, "createdAt": 1764023465123, "source": "mcp", "kind": "window" }
