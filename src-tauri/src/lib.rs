@@ -197,6 +197,8 @@ pub fn run() {
 
             let _ = std::fs::create_dir_all(dir(app.handle()));
             build_tray(app.handle())?;
+            // Show the history window at launch, so starting the app always shows something.
+            show_history(app.handle());
 
             match app.global_shortcut().register(hotkey) {
                 Ok(()) => app.state::<AppState>().hotkey_ok.store(true, Ordering::SeqCst),
@@ -220,6 +222,13 @@ pub fn run() {
             delete_capture,
             open_folder,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|_app, _event| {
+            // Opening the app again (Finder, Spotlight, Raycast) brings the window back.
+            #[cfg(target_os = "macos")]
+            if let tauri::RunEvent::Reopen { .. } = _event {
+                show_history(_app);
+            }
+        });
 }

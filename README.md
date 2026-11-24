@@ -80,7 +80,7 @@ Check: `pnpm --version` prints a version.
    `pnpm tauri dev` starts the Vite dev server (`pnpm dev`) by itself, so don't run `pnpm dev` too:
    both want port 1420.
    The first Rust build takes a few minutes. After that, look for the viewfinder icon in the menu bar.
-   There is no window at first: click the icon, then **Show History…**
+   The history window opens at launch. Closing it only hides it: bring it back from the menu bar icon (**Show History…**) or by opening the app again.
 2. Press **⌘⇧2** and drag over part of the screen. Press Space in the overlay to pick a window
    instead, or Esc to cancel.
    - The first time, macOS asks for **Screen Recording** permission. In development the permission
