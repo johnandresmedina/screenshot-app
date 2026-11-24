@@ -20,14 +20,19 @@ You need macOS 11 or later.
    ```sh
    xcode-select --install                                         # Apple's compilers
    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh  # Rust, then open a new terminal
-   brew install node                                              # Node 20 or later
+   ```
+   Node is pinned in `.nvmrc` (26.13.1) and pnpm in `package.json`. With
+   [nvm](https://github.com/nvm-sh/nvm):
+   ```sh
+   nvm install                                # reads .nvmrc
+   npm install -g corepack && corepack enable  # Node 25+ no longer ships Corepack; it provides the pinned pnpm
    ```
 2. Get the code and start it in development mode:
    ```sh
    git clone https://github.com/johnandresmedina/screenshot-app.git
    cd screenshot-app
-   npm install
-   npm run tauri dev
+   pnpm install
+   pnpm tauri dev
    ```
    The first Rust build takes a few minutes. After that, look for the viewfinder icon in the menu bar.
    There is no window at first: click the icon, then **Show History…**
@@ -35,11 +40,11 @@ You need macOS 11 or later.
    - The first time, macOS asks for **Screen Recording** permission. In development the permission
      belongs to your terminal app (Terminal, iTerm or VS Code), not to Screenshot. Turn it on in
      System Settings → Privacy & Security → Screen & System Audio Recording, then quit and reopen the
-     terminal and run `npm run tauri dev` again.
+     terminal and run `pnpm tauri dev` again.
    - Without the permission, captures contain only your wallpaper.
 4. To install it as a normal app:
    ```sh
-   npm run tauri build
+   pnpm tauri build
    open src-tauri/target/release/bundle/macos
    ```
    Drag **Screenshot.app** to Applications and open it. It asks for Screen Recording permission again,
@@ -48,8 +53,8 @@ You need macOS 11 or later.
 ## Tests
 
 ```sh
-npm test          # format helpers (node:test) and the folder scanner (cargo test)
-npm run build     # type-checks the frontend
+pnpm test         # format helpers (node:test) and the folder scanner (cargo test)
+pnpm build        # type-checks the frontend
 ```
 
 ## Layout
