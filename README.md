@@ -77,6 +77,8 @@ Check: `pnpm --version` prints a version.
    pnpm install
    pnpm tauri dev
    ```
+   `pnpm tauri dev` starts the Vite dev server (`pnpm dev`) by itself, so don't run `pnpm dev` too:
+   both want port 1420.
    The first Rust build takes a few minutes. After that, look for the viewfinder icon in the menu bar.
    There is no window at first: click the icon, then **Show History…**
 2. Press **⌘⇧2** and drag over part of the screen. Press Space in the overlay to pick a window
