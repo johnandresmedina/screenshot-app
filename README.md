@@ -12,22 +12,65 @@ What works now (build steps 1 to 4 of the plan):
 - **History window**: captures grouped by day, newest first, with Copy (as an image), Open (Preview),
   Finder (reveal) and Delete (moves to the Trash, so it can be undone). Closing the window just hides it.
 
-## Run it on your Mac
+## Set up your Mac
 
-You need macOS 11 or later.
+You need macOS 11 or later. Do these once, in Terminal. Skip any step whose check already works.
 
-1. Install the tools (skip any you already have):
-   ```sh
-   xcode-select --install                                         # Apple's compilers
-   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh  # Rust, then open a new terminal
-   ```
-   Node is pinned in `.nvmrc` (26.13.1) and pnpm in `package.json`. With
-   [nvm](https://github.com/nvm-sh/nvm):
-   ```sh
-   nvm install                                # reads .nvmrc
-   npm install -g corepack && corepack enable  # Node 25+ no longer ships Corepack; it provides the pinned pnpm
-   ```
-2. Get the code and start it in development mode:
+### 1. Apple's command line tools
+
+Rust needs Apple's compilers and linker.
+
+```sh
+xcode-select --install
+```
+
+If it says they're already installed, move on. Check: `xcode-select -p` prints a path.
+
+### 2. Rust
+
+Install with the official installer from [rustup.rs](https://rustup.rs) and press Enter to accept
+the default install:
+
+```sh
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+Then open a new Terminal window (or run `source "$HOME/.cargo/env"`) so `cargo` is on your PATH.
+Check: `rustc --version` and `cargo --version` both print a version. Update later with `rustup update`.
+
+### 3. Node.js
+
+The Node version is pinned in `.nvmrc` (26.13.1). With [nvm](https://github.com/nvm-sh/nvm):
+
+```sh
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh | bash   # skip if you have nvm
+# open a new Terminal window, then, inside the project folder:
+nvm install      # installs the version in .nvmrc
+nvm use          # switches to it
+```
+
+Check: `node --version` prints `v26.13.1`.
+
+### 4. pnpm
+
+The project uses pnpm, pinned in `package.json` (`"packageManager": "pnpm@12.23.0"`). Pick one way
+to get it:
+
+- **Corepack** (recommended): it reads that `packageManager` line and runs exactly that pnpm
+  version, so everyone uses the same one. Node 25 and later no longer include Corepack, so install
+  it first:
+  ```sh
+  npm install -g corepack
+  corepack enable
+  ```
+- **Or install pnpm directly**: `brew install pnpm` or `npm install -g pnpm`. This works too; pnpm
+  warns if its version doesn't match the pinned one.
+
+Check: `pnpm --version` prints a version.
+
+## Run it
+
+1. Get the code and start it in development mode:
    ```sh
    git clone https://github.com/johnandresmedina/screenshot-app.git
    cd screenshot-app
@@ -36,13 +79,14 @@ You need macOS 11 or later.
    ```
    The first Rust build takes a few minutes. After that, look for the viewfinder icon in the menu bar.
    There is no window at first: click the icon, then **Show History…**
-3. Press **⌘⇧2** and drag over part of the screen.
+2. Press **⌘⇧2** and drag over part of the screen. Press Space in the overlay to pick a window
+   instead, or Esc to cancel.
    - The first time, macOS asks for **Screen Recording** permission. In development the permission
      belongs to your terminal app (Terminal, iTerm or VS Code), not to Screenshot. Turn it on in
      System Settings → Privacy & Security → Screen & System Audio Recording, then quit and reopen the
      terminal and run `pnpm tauri dev` again.
    - Without the permission, captures contain only your wallpaper.
-4. To install it as a normal app:
+3. To install it as a normal app:
    ```sh
    pnpm tauri build
    open src-tauri/target/release/bundle/macos
